@@ -7,6 +7,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.MSBuild;
+using Buildalyzer.Workspaces;
+using Buildalyzer;
 
 namespace TransformationCS
 {
@@ -25,7 +27,7 @@ namespace TransformationCS
             // The test solution is copied to the output directory when you build this sample.
             var workspace = MSBuildWorkspace.Create();
 
-            var solutionPath = @"..\..\..\..\SyntaxTransformationQuickStart.sln";
+            string solutionPath = @"..\..\..\..\SyntaxTransformationQuickStart.sln";
             // Open the solution within the workspace.
             var originalSolution = await workspace.OpenSolutionAsync(solutionPath);
 
@@ -70,12 +72,22 @@ namespace TransformationCS
 
         static async Task TransformQuickStart(string[] args)
         {
+            string solutionPath = @"..\..\..\..\SyntaxTransformationQuickStart.sln";
+            string projectPath = @"..\..\..\DotnetCoreTest.csproj";
 
-            var solutionPath = @"..\..\..\..\SyntaxTransformationQuickStart.sln";
-            MSBuildLocator.RegisterDefaults();
-            var msWorkspace = MSBuildWorkspace.Create();
+            AnalyzerManager manager = new AnalyzerManager(solutionPath);
+            ProjectAnalyzer analyzer = manager.GetProject(projectPath);
+            AdhocWorkspace workspace = new AdhocWorkspace();
+            var solutionInfo = SolutionInfo.Create(SolutionId.CreateNewId(), VersionStamp.Create(), solutionPath);
+            workspace.AddSolution(solutionInfo);
 
-            var originalSolution = await msWorkspace.OpenSolutionAsync(solutionPath);
+            foreach (var project in manager.Projects)
+            {
+                project.Value.AddToWorkspace(workspace);
+            }
+            
+
+            var originalSolution = workspace.CurrentSolution;
             var newSolution = originalSolution;
 
             foreach (ProjectId projectId in originalSolution.ProjectIds)
@@ -99,7 +111,7 @@ namespace TransformationCS
                 }
             }
 
-            if (msWorkspace.TryApplyChanges(newSolution))
+            if (workspace.TryApplyChanges(newSolution))
             {
                 Console.WriteLine("Solution updated.");
             }
