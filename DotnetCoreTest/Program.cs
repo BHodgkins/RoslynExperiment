@@ -71,11 +71,14 @@ namespace TransformationCS
         static async Task TransformQuickStart(string[] args)
         {
 
-            var solutionPath = @"..\..\..\..\SyntaxTransformationQuickStart.sln";
-            MSBuildLocator.RegisterDefaults();
-            var msWorkspace = MSBuildWorkspace.Create();
+            string solutionPath = @"..\..\..\..\SyntaxTransformationQuickStart.sln";
 
-            var originalSolution = await msWorkspace.OpenSolutionAsync(solutionPath);
+            var workspace = new AdhocWorkspace();
+
+            var solution = SolutionInfo.Create(SolutionId.CreateNewId(), VersionStamp.Create(), solutionPath);
+
+            var originalSolution = workspace.AddSolution(solution);
+            
             var newSolution = originalSolution;
 
             foreach (ProjectId projectId in originalSolution.ProjectIds)
@@ -99,7 +102,7 @@ namespace TransformationCS
                 }
             }
 
-            if (msWorkspace.TryApplyChanges(newSolution))
+            if (workspace.TryApplyChanges(newSolution))
             {
                 Console.WriteLine("Solution updated.");
             }
