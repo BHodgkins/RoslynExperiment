@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.MSBuild;
+using DotnetCoreTest;
 
 namespace TransformationCS
 {
@@ -90,8 +91,10 @@ namespace TransformationCS
                     var model = await document.GetSemanticModelAsync();
 
                     var rewriter = new TypeInferenceRewriter(model);
+                    var localDeclarationPerLineRewriter = new LocalDeclarationPerLineRewriter();
+                    var tooLongFunctionRewriter = new TooLongFunctionRewriter();
 
-                    var newSource = rewriter.Visit(tree.GetRoot());
+                    var newSource = tooLongFunctionRewriter.Visit(tree.GetRoot());
 
                     var newDocument = document.WithText(newSource.GetText());
 
